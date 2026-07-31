@@ -1,4 +1,4 @@
-import subprocess, io, argparse, os
+import subprocess, io, argparse, os, time, sys
 import pandas as pd
 
 def get_memory_usage():
@@ -71,6 +71,7 @@ def pie_chart(df, rows = 24, columns = 80):
 
 from rich import print
 from rich.panel import Panel
+from rich.live import Live
 #from rich.progress import BarColumn, Progress, TextColumn
 
 
@@ -79,7 +80,7 @@ def tui(df, rows = 24, columns = 80):
 
     mem_width = 10
     pct_width = 8
-    title_width = max(10, columns - mem_width - pct_width - 10)
+    title_width = max(10, columns - mem_width - pct_width - 8)
 
     output_lines = []
     for _, row in top.iterrows():
@@ -102,30 +103,41 @@ def main():
     parser = argparse.ArgumentParser(description="Analyze system memory usage via smem.")
     group = parser.add_mutually_exclusive_group()
     group.add_argument('-t', '--tui', action='store_true', help='Display Rich TUI memory breakdown')
-    group.add_argument('-p', '--pie', action='store_true', help='Generate graphical pie chart using matplotlib')
     group.add_argument('-l', '--list', action='store_true', help='Print text list breakdown')
-
+    group.add_argument('-p', '--pie', action='store_true', help='Generate graphical pie chart using matplotlib')
+    
     args = parser.parse_args()
 
+    df = get_memory_usage()
+
+    if args.pie:
+        df = get_memory_usage()
+        pie_chart(df)
+        return
 
     if args.tui:
         f = tui
-    elif args.pie:
-        f = pie_chart
     elif args.list:
         f = text_list
     else:
         f = tui  # Default to TUI if no argument is provided
 
-    df = get_memory_usage()
+    try:
+         # Initialize Live display
+        with Live(refresh_per_second=4, screen=False) as live:
+            while True:
+                df = get_memory_usage()
+                rows = os.get_terminal_size()[1] - 2
+                columns = os.get_terminal_size()[0]
+                panel = f(df, rows, columns)
 
-    while True: 
-        rows = os.get_terminal_size()[1] - 3
-        columns = os.get_terminal_size()[0]
-        panel = f(df, rows, columns)
-        os.system('clear')
-        print(panel)
-        df = get_memory_usage()
+                # Update the live display panel in place without flashing
+                live.update(panel)
+                time.sleep(2)
+    finally:
+        # Always restore the cursor when exiting (via Ctrl+C or completion)
+        sys.stdout.write("\033[?25h")
+        sys.stdout.flush()
 
 
 if __name__ == "__main__":
