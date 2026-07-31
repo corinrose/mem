@@ -141,4 +141,8 @@ def main():
 
 
 if __name__ == "__main__":
+  try:
     main()
+  except KeyboardInterrupt:
+    # Exit cleanly and quietly with a standard Unix exit code (130 is standard for SIGINT)
+    sys.exit(130)
