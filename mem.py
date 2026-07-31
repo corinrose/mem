@@ -3,7 +3,7 @@ import pandas as pd
 
 def get_memory_usage():
     # Run the smem command to get memory usage
-    mem = subprocess.run(["smem", "-r"], capture_output=True, text=True, check=True)
+    mem = subprocess.run(["smem", "-r", "-a"], capture_output=True, text=True, check=True)
 
     # Read the fixed-width formatted file into a pandas DataFrame
     df = pd.read_fwf(io.StringIO(mem.stdout))
