@@ -105,8 +105,6 @@ def main():
     group.add_argument('-p', '--pie', action='store_true', help='Generate graphical pie chart using matplotlib')
     group.add_argument('-l', '--list', action='store_true', help='Print text list breakdown')
 
-    parser.add_argument('-n', '--number', type=int, default=10, help='Number of top applications to display (default: 10)')
-
     args = parser.parse_args()
 
 
