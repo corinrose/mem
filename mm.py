@@ -3,6 +3,7 @@ from rich.panel import Panel
 from rich.live import Live
 
 def get_memory_usage():
+    #app_memory = {"total" : psutil.virtual_memory().total, "free" : psutil.virtual_memory().available}
     app_memory = {}
 
     for p in psutil.process_iter():
@@ -39,11 +40,21 @@ def bytes2human(n):
 def tui(mem, rows = 24, columns = 80):
     top, total = get_top(mem, rows)
 
+    # Fetch global system memory stats via psutil
+    vm = psutil.virtual_memory()
+    sys_total = bytes2human(vm.total)
+    sys_avail = bytes2human(vm.available)
+    sys_used = bytes2human(vm.used)
+    buffers = bytes2human(getattr(vm, 'buffers', 0))
+    cached = bytes2human(getattr(vm, 'cached', 0))
+
     mem_width = 10
     pct_width = 8
     title_width = max(10, columns - mem_width - pct_width - 8)
 
     output_lines = []
+
+
     for item in top.items():
         app = item[0]
         mem = bytes2human(item[1])
@@ -51,6 +62,11 @@ def tui(mem, rows = 24, columns = 80):
 
         # Rich markup for colors
         output_lines.append(f"[bold cyan]{app:<{title_width}}[/bold cyan] : [green]{mem:>{mem_width}}[/green] ({pct:5.1f}%)")
+
+    # System overview header lines inside the panel
+    output_lines.append("─" * (columns - 4)) # Divider line
+    output_lines.append(f"[bold yellow]System Total:[/bold yellow] {sys_total} | [bold green]Used:[/bold green] {sys_used} | [bold cyan]Available:[/bold cyan] {sys_avail}")
+    output_lines.append(f"[dim]Buffers: {buffers} | Cached: {cached}[/dim]")
 
     panel = Panel(
         "\n".join(output_lines),
@@ -60,19 +76,16 @@ def tui(mem, rows = 24, columns = 80):
     return panel
 
 def main():
-    mem = get_memory_usage()
-
     try:
          # Initialize Live display
         with Live(refresh_per_second=4, screen=True) as live:
             while True:
-                rows = os.get_terminal_size()[1] - 2
+                rows = os.get_terminal_size()[1] - 5
                 columns = os.get_terminal_size()[0]
-                panel = tui(mem, rows, columns)
-
-                # Update the live display panel in place without flashing
-                live.update(panel)
+                
                 mem = get_memory_usage()
+                panel = tui(mem, rows, columns)
+                live.update(panel)
                 time.sleep(2)
     finally:
         # Always restore the cursor when exiting (via Ctrl+C or completion)
