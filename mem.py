@@ -124,15 +124,15 @@ def main():
 
     try:
          # Initialize Live display
-        with Live(refresh_per_second=4, screen=False) as live:
+        with Live(refresh_per_second=4, screen=True) as live:
             while True:
-                df = get_memory_usage()
                 rows = os.get_terminal_size()[1] - 2
                 columns = os.get_terminal_size()[0]
                 panel = f(df, rows, columns)
 
                 # Update the live display panel in place without flashing
                 live.update(panel)
+                df = get_memory_usage()
                 time.sleep(2)
     finally:
         # Always restore the cursor when exiting (via Ctrl+C or completion)
