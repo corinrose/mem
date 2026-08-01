@@ -3,10 +3,9 @@ from rich.panel import Panel
 from rich.live import Live
 
 def get_memory_usage():
-    plist = list(psutil.process_iter(["pid", "name", "cmdline"]))
     app_memory = {}
 
-    for p in plist:
+    for p in psutil.process_iter():
         try:
             exe = p.exe()
             if not exe:
