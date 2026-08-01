@@ -1,21 +1,23 @@
-import subprocess, io, argparse, os, time, sys, psutil
-import pandas as pd
-
-def get_exe(p):
-    try:
-        return p.exe()
-    except (psutil.AccessDenied, psutil.NoSuchProcess):
-        return []
-
-def get_pss(p):
-    try:
-        return p.memory_full_info().pss
-    except (psutil.AccessDenied, psutil.NoSuchProcess):
-        return 0
+import argparse, os, time, sys, psutil
 
 def get_memory_usage():
     plist = list(psutil.process_iter(["pid", "name", "cmdline"]))
-    return {app: sum([get_pss(p) for p in plist if app in get_exe(p)]) for app in [get_exe(p).split("/")[-1] for p in plist if len(get_exe(p)) > 0]}
+    app_memory = {}
+
+    for p in plist:
+        try:
+            exe = p.exe()
+            if not exe:
+                continue
+            app_name = exe.split("/")[-1]
+            pss = p.memory_full_info().pss
+        except (psutil.AccessDenied, psutil.NoSuchProcess):
+            continue
+
+        app_memory[app_name] = app_memory.get(app_name, 0) + pss
+
+    return app_memory
+
 
 
 
@@ -26,7 +28,6 @@ def get_top(mem, n = 10):
 
 
 import math
-import numpy as np
 
 def bytes2human(n):
     """
