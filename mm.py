@@ -17,6 +17,7 @@ def get_memory_usage():
             continue
 
         app_memory[app_name] = app_memory.get(app_name, 0) + pss
+
     return app_memory
 
 def get_top(mem, n = 10):
@@ -57,11 +58,11 @@ def tui(mem, rows = 24, columns = 80):
 
     for item in top.items():
         app = item[0]
-        mem = bytes2human(item[1])
+        pss = bytes2human(item[1])
         pct = (item[1] / total) * 100
 
         # Rich markup for colors
-        output_lines.append(f"[bold cyan]{app:<{title_width}}[/bold cyan] : [green]{mem:>{mem_width}}[/green] ({pct:5.1f}%)")
+        output_lines.append(f"[bold cyan]{app:<{title_width}}[/bold cyan] : [green]{pss:>{mem_width}}[/green] ({pct:5.1f}%)")
 
     # System overview header lines inside the panel
     output_lines.append("─" * (columns - 4)) # Divider line
